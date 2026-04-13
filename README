@@ -1,0 +1,197 @@
+1.generate package.js
+2.create .env file
+3.create express app and assign port number
+4.connect to db
+5.define schemas and create modules
+    -userTYpeSchema
+    first name
+    last name
+    email(unique)
+    password
+    role'
+    profileImageUrl
+    isUserCtive-used only in deleting or restoring
+
+
+    -articleSchema
+    author
+    title
+    category
+    content
+    comments
+    isArticleActive
+
+
+    6.implement APIs
+    7.create comman API for register,login and logout
+
+
+
+
+//update a user by id
+userApp.put("/users/:id",async(req,res)=>{
+    //get modified user from req body
+    const modifiedUser=req.body;
+    const uid=req.params.id;
+    //find user by id and update
+    const updatedUser= await userModel.findByIdAndUpdate(uid,{$set:{...modifiedUser}},{new:true,runValidators:true})
+     res.status(200).json({message:"user updated",payload:updatedUser})
+})
+
+
+// import exp from 'express'
+// import {hash} from 'bcrypt'
+// export const adminApp=exp.Router()
+// //route for creating admin
+// adminApp.post("/admin",async(req,res)=>{
+//     //get admin details from req body
+//     const adminObj=req.body
+//     //hash password
+//     adminObj.password=await hash(adminObj.password,12)
+//     //save admin to database
+//     //... code to save admin to database
+//     //send response
+//     res.status(201).json({message:"Admin created successfully"})
+// })
+// //route for admin login
+// adminApp.post("/admin/login",async(req,res)=>{
+//     //get admin credentials from req body
+//     const {email,password}=req.body
+//     //... code to verify admin credentials
+//     //send response
+//     res.status(200).json({message:"Admin logged in successfully"})
+// })
+// //route for admin to manage users and articles
+// adminApp.put("/admin/manage",async(req,res)=>{
+//     //get details from req body
+//     const {action,userId,articleId}=req.body
+//     //... code to perform admin actions like deleting user or article
+//     //send response
+//     res.status(200).json({message:"Admin action performed successfully"})
+// })
+// //route for admin to view all users and articles
+// adminApp.get("/admin/view",async(req,res)=>{
+//     //... code to fetch all users and articles from database    
+//     //send response
+//     res.status(200).json({message:"Admin view",users:[],articles:[]})
+// })
+// //route for admin to update own profile
+// adminApp.put("/admin/profile",async(req,res)=>{
+//     //get admin details from req body
+//     const adminDetails=req.body
+//     //... code to update admin profile in database
+//     //send response
+//     res.status(200).json({message:"Admin profile updated successfully"})
+// })
+// //route for admin to delete own account
+// adminApp.delete("/admin/delete",async(req,res)=>{
+//     //get admin id from req body
+//     const {adminId}=req.body
+//     //... code to delete admin account from database
+//     //send response
+//     res.status(200).json({message:"Admin account deleted successfully"})
+// })
+// //route for admin to reset password
+// adminApp.post("/admin/reset-password",async(req,res)=>{
+//     //get admin id and new password from req body
+//     const {adminId,newPassword}=req.body
+//     //hash new password
+//     const hashedPassword=await hash(newPassword,12)    
+//     //... code to update admin password in database
+//     //send response
+//     res.status(200).json({message:"Admin password reset successfully"})
+
+// })
+
+
+
+// import exp from 'express'
+// import { verifyToken } from '../middlewares/verifyToken.js'
+// export const adminApp=exp.Router()
+// //admin dashboard
+// adminApp.get("/dashboard",verifyToken("ADMIN"),(req,res)=>{
+//     res.status(200).json({message:"Welcome to admin dashboard"})
+// })
+// //admin profile
+// adminApp.get("/profile",verifyToken("ADMIN"),(req,res)=>{
+//     res.status(200).json({message:"Welcome to admin profile"})
+// })
+// //admin settings
+// adminApp.get("/settings",verifyToken("ADMIN"),(req,res)=>{
+//     res.status(200).json({message:"Welcome to admin settings"})
+// })
+// //admin manage users
+// adminApp.get("/manage-users",verifyToken("ADMIN"),(req,res)=>{
+//     res.status(200).json({message:"Welcome to admin manage users"})
+// })
+// //admin manage articles
+// adminApp.get("/manage-articles",verifyToken("ADMIN"),(req,res)=>{
+//     res.status(200).json({message:"Welcome to admin manage articles"})
+// })
+// //admin manage comments
+// adminApp.get("/manage-comments",verifyToken("ADMIN"),(req,res)=>{
+//     res.status(200).json({message:"Welcome to admin manage comments"})
+// })
+// //admin manage categories
+// adminApp.get("/manage-categories",verifyToken("ADMIN"),(req,res)=>{
+//     res.status(200).json({message:"Welcome to admin manage categories"})
+// })
+// //admin manage tags
+// adminApp.get("/manage-tags",verifyToken("ADMIN"),(req,res)=>{
+//     res.status(200).json({message:"Welcome to admin manage tags"})
+// })
+// //admin create category
+// adminApp.post("/create-category",verifyToken("ADMIN"),(req,res)=>{
+//     res.status(200).json({message:"Welcome to admin create category"})
+// }
+// )
+// //admin create tag
+// adminApp.post("/create-tag",verifyToken("ADMIN"),(req,res)=>{
+//     res.status(200).json({message:"Welcome to admin create tag"})
+// }
+// )
+// //admin create article
+// adminApp.post("/create-article",verifyToken("ADMIN"),(req,res)=>{
+//     res.status(200).json({message:"Welcome to admin create article"})
+// }
+// )
+// //admin delete article
+// adminApp.delete("/delete-article",verifyToken("ADMIN"),(req,res)=>{
+//     res.status(200).json({message:"Welcome to admin delete article"})
+// }
+// )
+// //admin delete comment
+// adminApp.delete("/delete-comment",verifyToken("ADMIN"),(req,res)=>{
+//     res.status(200).json({message:"Welcome to admin delete comment"})
+// }
+// )
+// //admin delete user
+// adminApp.delete("/delete-user",verifyToken("ADMIN"),(req,res)=>{
+//     res.status(200).json({message:"Welcome to admin delete user"})
+// }
+// )
+// //admin delete category
+// adminApp.delete("/delete-category",verifyToken("ADMIN"),(req,res)=>{
+//     res.status(200).json({message:"Welcome to admin delete category"})
+// }   
+// )
+// //admin delete tag
+// adminApp.delete("/delete-tag",verifyToken("ADMIN"),(req,res)=>{
+//     res.status(200).json({message:"Welcome to admin delete tag"})
+// }   
+// )
+// //admin update article
+// adminApp.put("/update-article",verifyToken("ADMIN"),(req,res)=>{
+//     res.status(200).json({message:"Welcome to admin update article"})
+// }
+// )
+// //admin update category
+// adminApp.put("/update-category",verifyToken("ADMIN"),(req,res)=>{
+//     res.status(200).json({message:"Welcome to admin update category"})
+// }
+// ) 
+// //admin update tag
+// adminApp.put("/update-tag",verifyToken("ADMIN"),(req,res)=>{
+//     res.status(200).json({message:"Welcome to admin update tag"})
+// }
+// )

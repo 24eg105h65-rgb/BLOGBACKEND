@@ -1,0 +1,12 @@
+### Admin login
+POST http://localhost:4000/auth/login
+Content-Type: application/json
+
+{
+  "email":"admin@mail.com",
+  "password":"admin"
+}
+
+### Read all USERS & AUTHORS (email)
+
+### Block or Activate User or Author

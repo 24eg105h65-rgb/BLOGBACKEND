@@ -1,7 +1,7 @@
 import exp from "express";
 import { UserModel } from "../models/UserModel.js";
 import { ArticleModel } from "../models/ArticleModel.js";
-import { verifyToken } from "../middleware/verifyToken.js";
+import { verifyToken } from "../middlewares/VerifyToken.js";
 export const authorApp = exp.Router();
 
 //Write article (protected route)
@@ -13,12 +13,12 @@ authorApp.post("/article", verifyToken("AUTHOR"), async (req, res) => {
   let user = req.user;
   //check author
   let author = await UserModel.findById(articleObj.author);
+  if (!author) {
+    return res.status(404).json({ message: "Invalid author" });
+  }
   //cross check emails
   if (author.email != user.email) {
     return res.status(403).json({ message: "You are not authorized" });
-  }
-  if (!author) {
-    return res.status(404).json({ message: "Invalid author" });
   }
 
   //create article Document
@@ -67,6 +67,9 @@ authorApp.patch("/articles", verifyToken("AUTHOR"), async (req, res) => {
   const { articleId, isArticleActive } = req.body;
   //get article by id
   const articleOfDB = await ArticleModel.findOne({ _id: articleId, author: authorIdOfToken });
+  if (!articleOfDB) {
+    return res.status(404).json({ message: "Article not found" });
+  }
   //check status
   if (isArticleActive === articleOfDB.isArticleActive) {
     return res.status(200).json({ message: "Article already in the same state" });

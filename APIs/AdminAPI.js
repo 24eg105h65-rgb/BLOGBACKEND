@@ -1,38 +1,77 @@
-import exp from 'express'
-import { verifyToken } from '../middleware/verifyToken.js'
-import { ArticleModel } from '../models/ArticleModel.js'
-import { UserModel } from '../models/UserModel.js'
-import {hash} from 'bcrypt'
+import exp from "express";
+import { verifyToken } from "../middlewares/VerifyToken.js";
+import { UserModel } from "../models/UserModel.js";
 
-export const adminApp = exp.Router()
+export const adminApp = exp.Router();
 
+// Read all users
+adminApp.get("/users", verifyToken("ADMIN"), async (req, res, next) => {
+	try {
+		const usersList = await UserModel.find({ role: "USER" }, { password: 0 }).sort({ createdAt: -1 });
+		res.status(200).json({ message: "users", payload: usersList });
+	} catch (err) {
+		next(err);
+	}
+});
 
+// Read all authors
+adminApp.get("/authors", verifyToken("ADMIN"), async (req, res, next) => {
+	try {
+		const authorsList = await UserModel.find({ role: "AUTHOR" }, { password: 0 }).sort({ createdAt: -1 });
+		res.status(200).json({ message: "authors", payload: authorsList });
+	} catch (err) {
+		next(err);
+	}
+});
 
-// View All Articles
-adminApp.get("/articles", verifyToken("ADMIN"), async (req, res) => {
-    // get all articles
-    const articles = await ArticleModel.find()
-    res.status(200).json({message: "All articles",payload: articles})
-})
+// Block or unblock user
+adminApp.patch("/users/:id/status", verifyToken("ADMIN"), async (req, res, next) => {
+	try {
+		const { id } = req.params;
+		const { isUserActive } = req.body;
 
-// Block / Activate User
-adminApp.put("/user", verifyToken("ADMIN"), async (req, res) => {
-    const { userId, isUserActive } = req.body
-    const user = await UserModel.findById(userId)
-    if (!user) {
-        return res.status(404).json({ message: "User not found" })
-    }
-    if (user.isUserActive === isUserActive) {
-        return res.status(200).json({ message: "User already in same state" })
-    }
-    user.isUserActive = isUserActive
-    await user.save()
-    res.status(200).json({message: "User status updated",payload: user})
-})
-//route for admin to reset password
-adminApp.post("/admin/reset-password",async(req,res)=>{
-    const {adminId,newPassword}=req.body
-    const hashedPassword=await hash(newPassword,12)    
-    res.status(200).json({message:"Admin password reset successfully"})
+		if (typeof isUserActive !== "boolean") {
+			return res.status(400).json({ message: "isUserActive must be boolean" });
+		}
 
-})
+		const updatedUser = await UserModel.findOneAndUpdate(
+			{ _id: id, role: "USER" },
+			{ $set: { isUserActive } },
+			{ new: true, projection: { password: 0 } },
+		);
+
+		if (!updatedUser) {
+			return res.status(404).json({ message: "User not found" });
+		}
+
+		res.status(200).json({ message: "User status updated", payload: updatedUser });
+	} catch (err) {
+		next(err);
+	}
+});
+
+// Block or unblock author
+adminApp.patch("/authors/:id/status", verifyToken("ADMIN"), async (req, res, next) => {
+	try {
+		const { id } = req.params;
+		const { isUserActive } = req.body;
+
+		if (typeof isUserActive !== "boolean") {
+			return res.status(400).json({ message: "isUserActive must be boolean" });
+		}
+
+		const updatedAuthor = await UserModel.findOneAndUpdate(
+			{ _id: id, role: "AUTHOR" },
+			{ $set: { isUserActive } },
+			{ new: true, projection: { password: 0 } },
+		);
+
+		if (!updatedAuthor) {
+			return res.status(404).json({ message: "Author not found" });
+		}
+
+		res.status(200).json({ message: "Author status updated", payload: updatedAuthor });
+	} catch (err) {
+		next(err);
+	}
+});

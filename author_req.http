@@ -1,4 +1,3 @@
-
 ### Register User
 POST http://localhost:4000/auth/users
 Content-Type: application/json

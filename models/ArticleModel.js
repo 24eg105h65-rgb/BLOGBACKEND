@@ -47,4 +47,8 @@ const articleSchema = new Schema(
 //create article model
 export const ArticleModel = model("article", articleSchema);
 
+// "mbsdf6sdf6df6sd6fs6dfs6df6sd"
+//ObjectId("bf7f7f7f7f7f7f77f7f")
 
+//{ comment:"",user:""}
+//find().populate("cart.product","pid productName brand")

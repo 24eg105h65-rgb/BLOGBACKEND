@@ -4,42 +4,80 @@ import { connect } from "mongoose";
 import { userApp } from "./APIs/UserAPI.js";
 import { authorApp } from "./APIs/AuthorAPI.js";
 import { adminApp } from "./APIs/AdminAPI.js";
-import { commonApp } from "./APIs/CommanAPI.js";
+import { commonApp } from "./APIs/CommonAPI.js";
 import cookieParser from "cookie-parser";
 import cors from 'cors'
 config();
 
+let dbConnected = false;
+
 //create express app
 const app = exp();
-//enable cors
+const allowedOrigins =
+  process.env.CORS_ORIGINS?.split(",").map((origin) => origin.trim()).filter(Boolean) ||
+  [
+    "http://localhost:5173",
+    "https://blog-application-frontend-theta.vercel.app",
+  ].filter(Boolean);
+// enable cors
 app.use(cors({
-  origin:['http://localhost:5173'],
-  credentials:true
+  origin: allowedOrigins,
+  credentials: true,
 }))
 //add cookie parser middeleware
 app.use(cookieParser())
 //body parser middleware
 app.use(exp.json());
+//connect to db
+const connectDB = async () => {
+  if (dbConnected) {
+    return;
+  }
+
+  try {
+    const mongoUri = process.env.DB_URL || process.env.MONGODB_URI;
+
+    if (!mongoUri) {
+      throw new Error("Missing DB_URL or MONGODB_URI");
+    }
+
+    await connect(mongoUri);
+    dbConnected = true;
+    console.log("DB server connected");
+  } catch (err) {
+    console.log("err in db connect", err);
+    throw err;
+  }
+};
+
+// In serverless environments, initialize DB lazily per request (cached by dbConnected)
+app.use(async (req, res, next) => {
+  try {
+    await connectDB();
+    next();
+  } catch (err) {
+    next(err);
+  }
+});
+
 //path level middlewares
 app.use("/user-api", userApp);
 app.use("/author-api", authorApp);
 app.use("/admin-api", adminApp);
 app.use("/auth", commonApp);
 
-//connect to db
-const connectDB = async () => {
-  try {
-    await connect(process.env.DB_URL);
-    console.log("DB server connected");
-    //assign port
-    const port = process.env.PORT || 5000;
-    app.listen(port, () => console.log(`server listening on ${port}..`));
-  } catch (err) {
-    console.log("err in db connect", err);
-  }
-};
-
-connectDB();
+if (process.env.VERCEL !== "1") {
+  connectDB()
+    .then(() => {
+      //assign port
+      const port = process.env.PORT || 4000;
+      app.listen(port, () => console.log(`server listening on ${port}..`));
+    })
+    .catch((err) => {
+      console.log("Failed to start server", err);
+      process.exit(1);
+    });
+}
 
 //to handle invalid path
 app.use((req, res, next) => {
@@ -74,3 +112,6 @@ app.use((err, req, res, next) => {
   //send server side error
   res.status(500).json({ message: "error occurred", error: "Server side error" });
 });
+
+export { app, connectDB };
+export default app;

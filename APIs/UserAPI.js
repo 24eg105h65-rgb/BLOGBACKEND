@@ -1,6 +1,5 @@
-
 import exp from "express";
-import { verifyToken } from "../middleware/verifyToken.js";
+import { verifyToken } from "../middlewares/VerifyToken.js";
 import { ArticleModel } from "../models/ArticleModel.js";
 export const userApp = exp.Router();
 
@@ -18,8 +17,8 @@ userApp.put("/articles", verifyToken("USER"), async (req, res) => {
   const { articleId, comment } = req.body;
   //check article
   const articleDocument = await ArticleModel
-  .findOne({ _id: articleId, isArticleActive: true })
-  .populate("comments.user");
+                          .findOne({ _id: articleId, isArticleActive: true })
+                           .populate("comments.user");
 
   console.log(articleDocument);
   //if article nbot found

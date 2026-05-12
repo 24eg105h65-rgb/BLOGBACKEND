@@ -34,18 +34,33 @@ const connectDB = async () => {
     return;
   }
 
+  const mongoUri = process.env.DB_URL || process.env.MONGODB_URI;
+  const localFallbackUri = process.env.LOCAL_DB_URL || "mongodb://127.0.0.1:27017/blogbackend";
+
+  if (!mongoUri) {
+    throw new Error("Missing DB_URL or MONGODB_URI");
+  }
+
   try {
-    const mongoUri = process.env.DB_URL || process.env.MONGODB_URI;
-
-    if (!mongoUri) {
-      throw new Error("Missing DB_URL or MONGODB_URI");
-    }
-
     await connect(mongoUri);
     dbConnected = true;
     console.log("DB server connected");
   } catch (err) {
     console.log("err in db connect", err);
+
+    if (process.env.NODE_ENV !== "production" && localFallbackUri && localFallbackUri !== mongoUri) {
+      console.log("Attempting local MongoDB fallback...");
+      try {
+        await connect(localFallbackUri);
+        dbConnected = true;
+        console.log("Local DB server connected");
+        return;
+      } catch (fallbackErr) {
+        console.log("Local fallback DB connection failed", fallbackErr);
+        throw fallbackErr;
+      }
+    }
+
     throw err;
   }
 };
@@ -67,15 +82,18 @@ app.use("/admin-api", adminApp);
 app.use("/auth", commonApp);
 
 if (process.env.VERCEL !== "1") {
+  const startServer = () => {
+    const port = process.env.PORT || 4000;
+    app.listen(port, () => console.log(`server listening on ${port}..`));
+  };
+
   connectDB()
     .then(() => {
-      //assign port
-      const port = process.env.PORT || 4000;
-      app.listen(port, () => console.log(`server listening on ${port}..`));
+      startServer();
     })
     .catch((err) => {
-      console.log("Failed to start server", err);
-      process.exit(1);
+      console.log("Warning: DB connection failed on startup, starting server anyway", err);
+      startServer();
     });
 }
 

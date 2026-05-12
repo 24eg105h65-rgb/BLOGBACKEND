@@ -1,10 +1,11 @@
 import exp from "express";
 import { UserModel } from "../models/UserModel.js";
-import { hash, compare } from "bcryptjs";
+import bcrypt from "bcrypt";
 import { config } from "dotenv";
 import jwt from "jsonwebtoken";
-import { verifyToken } from "../middlewares/VerifyToken.js";
+import { verifyToken } from "../middleware/verifyToken.js";
 const { sign } = jwt;
+const { hash, compare } = bcrypt;
 export const commonApp = exp.Router();
 import { upload } from "../config/multer.js";
 import { uploadToCloudinary } from "../config/cloudinaryUpload.js";
@@ -171,12 +172,37 @@ commonApp.get("/check-auth", async (req, res) => {
 });
 
 //Change password
-commonApp.put("/password", verifyToken("USER", "AUTHOR", "ADMIN"), async (req, res) => {
-  //check current password and new password are same
-  //get current password of user/admin/author
-  //check the current password of req and user are not same
-  // hash new password
-  //replace current password of user with hashed new password
-  //save
-  //send res
+commonApp.put("/password", verifyToken("USER", "AUTHOR", "ADMIN"), async (req, res, next) => {
+  try {
+    const { currentPassword, newPassword, confirmPassword } = req.body;
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      return res.status(400).json({ message: "Missing password fields" });
+    }
+
+    if (newPassword !== confirmPassword) {
+      return res.status(400).json({ message: "New passwords do not match" });
+    }
+
+    const userId = req.user?.id;
+    if (!userId) {
+      return res.status(401).json({ message: "Invalid token" });
+    }
+
+    const user = await UserModel.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const isCurrentPasswordValid = await compare(currentPassword, user.password);
+    if (!isCurrentPasswordValid) {
+      return res.status(400).json({ message: "Current password is incorrect" });
+    }
+
+    user.password = await hash(newPassword, 12);
+    await user.save();
+
+    return res.status(200).json({ message: "Password changed successfully" });
+  } catch (err) {
+    next(err);
+  }
 });

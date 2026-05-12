@@ -15,6 +15,9 @@ export const verifyToken = (...allowedRoles) => {
       if (!token) {
         return res.status(401).json({ message: "Please login first" });
       }
+      if (!jwtSecret) {
+        return res.status(500).json({ message: "Server misconfigured: missing JWT secret" });
+      }
       //validate token(decode the token)
       let decodedToken = verify(token, jwtSecret);
 

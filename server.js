@@ -18,6 +18,7 @@ const allowedOrigins =
   [
     "http://localhost:5173",
     "https://blog-application-frontend-theta.vercel.app",
+    "https://blog-frontend-liard-three.vercel.app",
   ].filter(Boolean);
 // enable cors
 app.use(cors({

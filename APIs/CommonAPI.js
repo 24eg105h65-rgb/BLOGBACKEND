@@ -21,15 +21,12 @@ const cookieOptions = {
 
 const jwtSecret = process.env.SECRET_KEY || process.env.JWT_SECRET;
 
-//Route for register
-commonApp.post("/users", upload.single("profileImageUrl"), async (req, res, next) => {
+const registerUser = async (req, res, next) => {
   let cloudinaryResult;
   try {
     let allowedRoles = ["USER", "AUTHOR", "ADMIN"];
     //get user from req
     const newUser = req.body;
-    console.log(newUser);
-    console.log(req.file);
 
     //check role
     if (!allowedRoles.includes(newUser.role)) {
@@ -41,11 +38,9 @@ commonApp.post("/users", upload.single("profileImageUrl"), async (req, res, next
       cloudinaryResult = await uploadToCloudinary(req.file.buffer);
     }
 
-    // console.log("cloudinaryResult", cloudinaryResult);
     //add CDN link(secure_url) of image to newUserObj
     newUser.profileImageUrl = cloudinaryResult?.secure_url;
 
-    //run validators manually
     //hash password and replace plain with hashed one
     newUser.password = await hash(newUser.password, 12);
 
@@ -64,7 +59,11 @@ commonApp.post("/users", upload.single("profileImageUrl"), async (req, res, next
     }
     return next(err);
   }
-});
+};
+
+//Route for register
+commonApp.post("/users", upload.single("profileImageUrl"), registerUser);
+commonApp.post("/register", upload.single("profileImageUrl"), registerUser);
 
 //Route for Login(USER, AUTHOR and ADMIN)
 commonApp.post("/login", async (req, res) => {
@@ -121,6 +120,10 @@ commonApp.get("/logout", (req, res) => {
   //delete token from cookie storage
   res.clearCookie("token", cookieOptions);
   //send res
+  res.status(200).json({ message: "Logout success" });
+});
+commonApp.post("/logout", (req, res) => {
+  res.clearCookie("token", cookieOptions);
   res.status(200).json({ message: "Logout success" });
 });
 

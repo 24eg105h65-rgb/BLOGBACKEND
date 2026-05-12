@@ -81,6 +81,10 @@ app.use("/author-api", authorApp);
 app.use("/admin-api", adminApp);
 app.use("/auth", commonApp);
 
+app.get("/", (req, res) => {
+  res.status(200).json({ message: "Blog backend running" });
+});
+
 if (process.env.VERCEL !== "1") {
   const startServer = () => {
     const port = process.env.PORT || 4000;
